@@ -1,0 +1,61 @@
+CATALOG_BASEURL=http://catalog-service-qa.altidev.net/catalog-service
+IQA_CATALOG_BASEURL=https://catalog-service-iqa.vz.altidev.net/catalog-service
+HIT_COUNT=10
+
+declare -a CURL_METADATA=("time_total" "time_namelookup" "time_connect" 
+						  "time_appconnect" "time_pretransfer" "time_redirect" "time_starttransfer"
+						  "size_download" "speed_download" "size_upload" "speed_upload")
+CURL_METADATA_FORMAT=%{http_code}
+CURL_METADATA_HEADER=http_code
+
+## now loop through the above array
+for i in "${CURL_METADATA[@]}"
+do
+   CURL_METADATA_FORMAT=$CURL_METADATA_FORMAT,%{$i}
+   CURL_METADATA_HEADER=$CURL_METADATA_HEADER,$i
+done
+CURL_METADATA_FORMAT=$CURL_METADATA_FORMAT\\n
+CURL_METADATA_HEADER=$CURL_METADATA_HEADER
+
+CURL_OPTIONS_FILENAME=curl_options.txt
+
+#mkfileP() { mkdir -p "$(dirname "$1")" || return; touch "$1"; }
+
+mkdir report
+mkdir output
+
+timestamp=$(date +%s)
+fileName="report/HTTPReport"$timestamp".csv"
+
+
+
+
+
+cat >> $fileName <<EOF
+
+Fetch  actor by product, $CATALOG_BASEURL/api/v1/actor/actorType/Vendor/productCode/0000000062
+$CURL_METADATA_HEADER
+EOF
+
+COUNTER=0
+while [  $COUNTER -lt $HIT_COUNT ]; do
+  echo "Fetch catalog details" - $COUNTER
+  curl -w $CURL_METADATA_FORMAT -o output/curl-Catalog-dev$COUNTER.txt -s -X GET \
+  $CATALOG_BASEURL/api/v1/actor/actorType/Vendor/productCode/0000000062 \
+  -H 'accept: application/json' \
+  -H 'uid: muruganandham.kalimuthu@altisource.com' \
+  -H 'content-type: application/json' >> $fileName
+	
+    let COUNTER=COUNTER+1 
+done
+
+
+
+
+
+
+
+
+
+
+  
